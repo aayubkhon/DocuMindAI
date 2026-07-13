@@ -26,10 +26,11 @@ from app.services.chunking import chunk_pages
 from app.services.llm import get_llm
 from app.services.pdf_service import extract_pages
 
-# Human-readable names for the languages the UI offers.
+# How each UI language should be described to the model (including script).
 _LANGUAGE_NAMES = {
     "en": "English",
-    "uz": "Uzbek",
+    "uz-latn": "Uzbek written in the Latin alphabet (lotin)",
+    "uz-cyrl": "Uzbek written in the Cyrillic alphabet (kirill)",
     "ru": "Russian",
     "ko": "Korean",
 }

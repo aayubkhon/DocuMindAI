@@ -1,6 +1,7 @@
 export const LANGUAGES = [
   { code: "ko", label: "한국어" },
-  { code: "uz", label: "Oʻzbekcha" },
+  { code: "uz-latn", label: "Oʻzbekcha" },
+  { code: "uz-cyrl", label: "Ўзбекча" },
   { code: "en", label: "English" },
   { code: "ru", label: "Русский" },
 ] as const;
@@ -61,7 +62,7 @@ export const translations: Record<Lang, Dict> = {
     answerLabel: "Answer",
     summarizeMsg: "Summarize this document.",
   },
-  uz: {
+  "uz-latn": {
     subtitle: "Hujjat tahlili",
     uploadPdf: "PDF yuklash",
     working: "Bajarilmoqda…",
@@ -85,6 +86,31 @@ export const translations: Record<Lang, Dict> = {
     language: "Til",
     answerLabel: "Javob",
     summarizeMsg: "Ushbu hujjatni xulosalab ber.",
+  },
+  "uz-cyrl": {
+    subtitle: "Ҳужжат таҳлили",
+    uploadPdf: "PDF юклаш",
+    working: "Бажарилмоқда…",
+    library: "Ҳужжатлар кутубхонаси",
+    noDocs: "Ҳали ҳужжат йўқ.",
+    indexing: "индексланмоқда…",
+    failed: "хато",
+    delete: "Ўчириш",
+    creativeFreedom: "Ижодий эркинлик",
+    contextChunks: "Контекст бўлаклари",
+    summarize: "Ҳужжатни хулосалаш",
+    quiz: "Тест яратиш",
+    scopeAll: "Қамров: барча ҳужжатлар",
+    scopeDoc: (n) => `Қамров: ${n}`,
+    scopeIndexing: (n) => `Индексланмоқда ${n}…`,
+    placeholder: "PDF юкланг ва савол беринг.",
+    retrievalDetails: "Қидирув тафсилотлари",
+    thinking: "Ўйлаяпти…",
+    askPlaceholder: "Савол беринг ёки буйруқ киритинг…",
+    send: "Юбориш",
+    language: "Тил",
+    answerLabel: "Жавоб",
+    summarizeMsg: "Ушбу ҳужжатни хулосалаб бер.",
   },
   ru: {
     subtitle: "Анализ документов",
@@ -145,8 +171,10 @@ export function detectLang(): Lang {
   if (typeof window === "undefined") return "en";
   const saved = window.localStorage.getItem(STORAGE_KEY);
   if (saved && CODES.includes(saved)) return saved as Lang;
-  const locale = navigator.language.slice(0, 2).toLowerCase();
-  return CODES.includes(locale) ? (locale as Lang) : "en";
+  const locale = navigator.language.toLowerCase();
+  if (locale.startsWith("uz")) return "uz-latn";
+  const base = locale.slice(0, 2);
+  return CODES.includes(base) ? (base as Lang) : "en";
 }
 
 export function saveLang(lang: Lang): void {

@@ -4,7 +4,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 # Languages the assistant can respond in (matches the frontend selector).
-Language = Literal["en", "uz", "ru", "ko"]
+Language = Literal["en", "uz-latn", "uz-cyrl", "ru", "ko"]
 
 
 class GenerationParams(BaseModel):
