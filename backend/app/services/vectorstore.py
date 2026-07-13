@@ -61,9 +61,6 @@ def _chunk_ids(document_id: str, count: int) -> list[str]:
     return [f"{document_id}-{i}" for i in range(count)]
 
 
-_SUBBATCH = 50  # chunks embedded+committed per step (keeps progress if we stop)
-
-
 def _add_batch(vs: PineconeVectorStore, batch, ids, *, max_retries: int = 4) -> None:
     """Add one batch, retrying if a cloud embedding quota is momentarily hit."""
     for attempt in range(max_retries):
@@ -89,12 +86,19 @@ def add_documents(documents: list[Document], *, document_id: str) -> int:
         return 0
     vs = get_vectorstore()
     ids = _chunk_ids(document_id, len(documents))
+
+    # Cloud embedders (Gemini) are rate-limited (~100/min), so throttle; local
+    # Ollama has no limit, so commit in large batches with no delay.
+    throttle = settings.embed_provider != "ollama"
+    subbatch = 20 if throttle else 64
     added = 0
     try:
-        for start in range(0, len(documents), _SUBBATCH):
-            end = min(start + _SUBBATCH, len(documents))
+        for start in range(0, len(documents), subbatch):
+            end = min(start + subbatch, len(documents))
             _add_batch(vs, documents[start:end], ids[start:end])
             added = end
+            if throttle and end < len(documents):
+                time.sleep(15)  # keep well under ~100 embeddings/min
     except Exception:
         if added:
             vs.delete(ids=ids[:added])
