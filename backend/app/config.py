@@ -34,9 +34,10 @@ class Settings(BaseSettings):
     upload_dir: str = str(BASE_DIR / "uploads")
     max_upload_mb: int = 25
 
-    # RAG / chunking parameters
-    chunk_size: int = 1000
-    chunk_overlap: int = 150
+    # RAG / chunking parameters. Chunks are kept fairly large so a typical book
+    # stays under the Gemini free-tier embedding quota (100 requests/min).
+    chunk_size: int = 3500
+    chunk_overlap: int = 300
     retrieval_k: int = 4
 
     # Generation parameters (defaults; overridable per request)
