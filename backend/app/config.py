@@ -20,9 +20,9 @@ class Settings(BaseSettings):
 
     # Google Gemini (LLM + embeddings)
     google_api_key: str = ""
-    gemini_llm_model: str = "gemini-1.5-flash"
-    gemini_embed_model: str = "models/text-embedding-004"
-    embed_dimension: int = 768  # text-embedding-004 output size
+    gemini_llm_model: str = "gemini-2.5-flash"
+    gemini_embed_model: str = "models/gemini-embedding-001"
+    embed_dimension: int = 3072  # gemini-embedding-001 default output size
 
     # Pinecone vector store
     pinecone_api_key: str = ""

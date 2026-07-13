@@ -28,7 +28,7 @@ cp .env.example .env          # then fill in GOOGLE_API_KEY and PINECONE_API_KEY
 uvicorn app.main:app --reload # http://localhost:8000
 ```
 
-The Pinecone index is created automatically on first use (dimension 768,
+The Pinecone index is created automatically on first use (dimension 3072,
 cosine metric) if it does not already exist.
 
 Interactive API docs: http://localhost:8000/docs
