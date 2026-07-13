@@ -47,6 +47,15 @@ export default function Home() {
     };
   }, []);
 
+  // While any document is still indexing, poll for its updated status.
+  useEffect(() => {
+    if (!documents.some((d) => d.status === "processing")) return;
+    const timer = setTimeout(() => {
+      refresh();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [documents, refresh]);
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -137,7 +146,9 @@ export default function Home() {
     }
   }
 
-  const activeName = documents.find((d) => d.id === activeDoc)?.filename ?? "";
+  const active = documents.find((d) => d.id === activeDoc);
+  const activeName = active?.filename ?? "";
+  const activeReady = active?.status === "ready";
 
   return (
     <div className={styles.app}>
@@ -177,9 +188,15 @@ export default function Home() {
                 <button
                   className={styles.docName}
                   onClick={() => setActiveDoc(doc.id)}
-                  title={doc.filename}
+                  title={doc.error ?? doc.filename}
                 >
-                  {doc.filename}
+                  <span className={styles.docFile}>{doc.filename}</span>
+                  {doc.status === "processing" && (
+                    <span className={styles.badgeProcessing}>indexing…</span>
+                  )}
+                  {doc.status === "failed" && (
+                    <span className={styles.badgeFailed}>failed</span>
+                  )}
                 </button>
                 <button
                   className={styles.deleteBtn}
@@ -226,19 +243,23 @@ export default function Home() {
           <button
             className={styles.btnPrimary}
             onClick={handleSummarize}
-            disabled={!activeDoc || busy}
+            disabled={!activeReady || busy}
           >
             Summarize Document
           </button>
           <button
             className={styles.btnGhost}
             onClick={handleQuiz}
-            disabled={!activeDoc || busy}
+            disabled={!activeReady || busy}
           >
             Generate Quiz
           </button>
           <span className={styles.scope}>
-            {activeDoc ? `Scope: ${activeName}` : "Scope: all documents"}
+            {activeDoc
+              ? activeReady
+                ? `Scope: ${activeName}`
+                : `Indexing ${activeName}…`
+              : "Scope: all documents"}
           </span>
         </div>
 

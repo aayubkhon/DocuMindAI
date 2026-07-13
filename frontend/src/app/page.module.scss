@@ -100,13 +100,31 @@
 }
 
 .docName {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.15rem;
   text-align: left;
   background: none;
   border: none;
   color: inherit;
+}
+
+.docFile {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badgeProcessing {
+  font-size: 0.65rem;
+  color: #fbbf24;
+}
+
+.badgeFailed {
+  font-size: 0.65rem;
+  color: v.$danger;
 }
 
 .deleteBtn {

@@ -1,9 +1,13 @@
+export type DocumentStatus = "processing" | "ready" | "failed";
+
 export interface DocumentMeta {
   id: string;
   filename: string;
   size_bytes: number;
   num_chunks: number;
   uploaded_at: string;
+  status: DocumentStatus;
+  error: string | null;
 }
 
 export interface SourceChunk {
