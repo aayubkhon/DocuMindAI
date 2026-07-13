@@ -1,0 +1,41 @@
+# Render blueprint for the DocuMind_AI backend (FastAPI).
+# Deploy: https://dashboard.render.com → New → Blueprint → pick this repo.
+# Secrets (sync: false) are entered in the Render dashboard, not committed.
+services:
+  - type: web
+    name: documind-ai-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.13
+      - key: LLM_PROVIDER
+        value: groq
+      - key: EMBED_PROVIDER
+        value: gemini
+      - key: GROQ_LLM_MODEL
+        value: llama-3.3-70b-versatile
+      - key: GEMINI_EMBED_MODEL
+        value: models/gemini-embedding-001
+      - key: EMBED_DIMENSION
+        value: "3072"
+      - key: PINECONE_INDEX
+        value: documind
+      - key: PINECONE_CLOUD
+        value: aws
+      - key: PINECONE_REGION
+        value: us-east-1
+      # Secrets — set these in the Render dashboard:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: PINECONE_API_KEY
+        sync: false
+      # JSON array including your Vercel URL, e.g. ["https://documind.vercel.app"]
+      - key: CORS_ORIGINS
+        sync: false
