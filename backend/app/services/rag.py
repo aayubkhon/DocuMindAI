@@ -133,6 +133,12 @@ def embed_document(document_id: str, chunks: list[Document]) -> None:
     try:
         vectorstore.add_documents(chunks, document_id=document_id)
         registry.set_status(document_id, "ready")
+    except vectorstore.EmbeddingQuotaError:
+        registry.set_status(
+            document_id,
+            "failed",
+            "Embedding quota exceeded. Please try again in a minute.",
+        )
     except Exception as exc:  # noqa: BLE001 — record any failure for the UI
         registry.set_status(document_id, "failed", str(exc)[:200])
 

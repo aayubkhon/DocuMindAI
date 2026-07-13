@@ -15,18 +15,32 @@ class Settings(BaseSettings):
     app_name: str = "DocuMind_AI"
     api_prefix: str = "/api"
 
-    # CORS — frontend origins
+    # CORS — frontend origins (JSON array; set to your Vercel URL in production)
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
 
-    # Ollama (local LLM + embeddings) — free, unlimited, private
+    # Providers. Cloud (groq + gemini) is deploy-friendly; ollama is free & local.
+    llm_provider: str = "groq"  # "groq" | "ollama"
+    embed_provider: str = "gemini"  # "gemini" | "ollama"
+
+    # Groq (cloud LLM — generous free tier)
+    groq_api_key: str = ""
+    groq_llm_model: str = "llama-3.3-70b-versatile"
+
+    # Google Gemini (cloud embeddings)
+    google_api_key: str = ""
+    gemini_embed_model: str = "models/gemini-embedding-001"
+
+    # Ollama (local LLM + embeddings — free, unlimited, private)
     ollama_base_url: str = "http://localhost:11434"
     ollama_llm_model: str = "qwen2.5:7b"
     ollama_embed_model: str = "nomic-embed-text"
-    embed_dimension: int = 768  # nomic-embed-text output size
+
+    # Must match the active embedder: gemini-embedding-001 = 3072, nomic = 768.
+    embed_dimension: int = 3072
 
     # Pinecone vector store
     pinecone_api_key: str = ""
-    pinecone_index: str = "documind-ollama"
+    pinecone_index: str = "documind"
     pinecone_cloud: str = "aws"
     pinecone_region: str = "us-east-1"
 
