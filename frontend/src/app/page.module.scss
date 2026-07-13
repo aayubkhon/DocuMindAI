@@ -3,352 +3,945 @@
 .app {
   display: flex;
   height: 100vh;
+  width: 100vw;
   background: v.$bg;
   color: v.$text;
+  overflow: hidden;
 }
 
 /* ---------- Sidebar ---------- */
 .sidebar {
   display: flex;
   flex-direction: column;
-  width: 20rem;
+  width: 22rem;
   border-right: 1px solid v.$border;
-  background: rgba(24, 24, 27, 0.5);
+  background: v.$surface;
+  box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
+  z-index: 10;
 }
 
 .brand {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 1rem;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
   border-bottom: 1px solid v.$border;
-
-  h1 {
-    font-size: 1.125rem;
-    font-weight: 600;
-  }
-  p {
-    font-size: 0.75rem;
-    color: v.$text-dim;
-  }
 }
 
-.langSelect {
-  padding: 0.3rem 0.4rem;
-  font-size: 0.75rem;
+.logoArea {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  background: v.$accent-soft;
+  border: 1px solid v.$accent;
+  border-radius: v.$radius-sm;
+  box-shadow: 0 0 10px rgba(197, 168, 128, 0.15);
+}
+
+.goldGlyph {
+  color: v.$accent-glow;
+}
+
+.brandTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: v.$text;
+}
+
+.goldText {
+  color: v.$accent-glow;
+}
+
+.brandSub {
+  font-size: 0.75rem;
+  color: v.$text-muted;
+  margin-top: 0.1rem;
+}
+
+.langSelectWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
   background: v.$surface-2;
   border: 1px solid v.$border;
   border-radius: v.$radius-sm;
-  outline: none;
+  padding: 0.5rem 0.75rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
 
-  &:focus {
+  &:hover {
     border-color: v.$accent;
   }
 }
 
-.uploadWrap {
-  padding: 1rem;
+.langIcon {
+  color: v.$accent;
+  margin-right: 0.5rem;
 }
 
-.uploadBtn {
+.langSelect {
   width: 100%;
-  padding: 1.5rem 1rem;
-  font-size: 0.875rem;
-  color: v.$text-muted;
-  background: rgba(39, 39, 42, 0.4);
-  border: 1px dashed v.$surface-2;
-  border-radius: v.$radius;
-  transition: border-color 0.15s, color 0.15s;
+  font-size: 0.85rem;
+  color: v.$text;
+  background: transparent;
+  border: none;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  padding-right: 1.5rem;
+}
 
-  &:hover:not(:disabled) {
-    border-color: v.$accent;
-    color: v.$accent;
+.langChevron {
+  position: absolute;
+  right: 0.75rem;
+  color: v.$text-dim;
+  pointer-events: none;
+}
+
+/* ---------- Upload Card ---------- */
+.uploadWrap {
+  padding: 1.25rem 1.5rem;
+}
+
+.uploadCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  border: 1.5px dashed v.$border;
+  border-radius: v.$radius;
+  background: rgba(18, 19, 24, 0.5);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+
+  &:hover:not(.busy) {
+    border-color: v.$accent-glow;
+    background: v.$accent-soft;
+    box-shadow: v.$shadow-glow;
+    transform: translateY(-2px);
+
+    .uploadIcon {
+      color: v.$accent-glow;
+      transform: translateY(-2px);
+    }
   }
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
+
+  &.busy {
+    cursor: not-allowed;
+    opacity: 0.7;
   }
 }
 
+.uploadIcon {
+  color: v.$accent;
+  margin-bottom: 0.5rem;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.uploadText {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: v.$text;
+}
+
+.uploadMeta {
+  font-size: 0.7rem;
+  color: v.$text-dim;
+  margin-top: 0.25rem;
+}
+
+/* ---------- Document Library ---------- */
 .library {
+  display: flex;
+  flex-direction: column;
   flex: 1;
-  overflow-y: auto;
-  padding: 0 1rem;
+  min-height: 0;
+  padding: 0 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.libraryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
 }
 
 .libraryTitle {
-  margin-bottom: 0.5rem;
-  font-size: 0.7rem;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  color: v.$text-muted;
+}
+
+.refreshBtn {
   color: v.$text-dim;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: color 0.2s, background 0.2s;
+
+  &:hover {
+    color: v.$accent;
+    background: v.$surface-2;
+  }
+
+  svg {
+    display: block;
+  }
 }
 
 .docList {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .docItem {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0.75rem;
+  border: 1px solid v.$border-light;
   border-radius: v.$radius-sm;
-  font-size: 0.875rem;
+  background: rgba(28, 29, 36, 0.2);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 
   .deleteBtn {
     opacity: 0;
+    transform: translateX(10px);
   }
+
   &:hover {
-    background: v.$surface;
+    border-color: v.$border;
+    background: rgba(28, 29, 36, 0.5);
+
     .deleteBtn {
       opacity: 1;
+      transform: translateX(0);
     }
   }
+
   &.active {
     background: v.$accent-soft;
-    color: #5eead4;
+    border-color: v.$accent;
+    box-shadow: inset 0 0 8px rgba(197, 168, 128, 0.05);
+
+    .docFileIcon {
+      color: v.$accent-glow;
+    }
+    .docFile {
+      color: v.$text;
+      font-weight: 500;
+    }
   }
 }
 
 .docName {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  padding: 0.75rem;
+  text-align: left;
+  min-width: 0;
+  gap: 0.5rem;
+}
+
+.docInfoLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   min-width: 0;
   flex: 1;
+}
+
+.docFileIcon {
+  color: v.$text-dim;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.docTextDetails {
+  display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  text-align: left;
-  background: none;
-  border: none;
-  color: inherit;
+  min-width: 0;
 }
 
 .docFile {
+  font-size: 0.85rem;
+  color: v.$text-muted;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.docFileSize {
+  font-size: 0.7rem;
+  color: v.$text-dim;
+  margin-top: 0.15rem;
+}
+
 .badgeProcessing {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
   font-size: 0.65rem;
-  color: #fbbf24;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 .badgeFailed {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
   font-size: 0.65rem;
   color: v.$danger;
+  background: v.$danger-soft;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+.badgeReady {
+  color: v.$accent-glow;
+  display: flex;
+  align-items: center;
 }
 
 .deleteBtn {
-  margin-left: 0.5rem;
-  font-size: 0.75rem;
+  margin-right: 0.75rem;
+  padding: 0.35rem;
+  border-radius: 6px;
   color: v.$text-dim;
-  background: none;
-  border: none;
-  transition: opacity 0.15s, color 0.15s;
+  transition: all 0.2s ease;
+  background: transparent;
 
   &:hover {
-    color: v.$danger;
+    color: v.$danger-hover;
+    background: v.$danger-soft;
   }
 }
 
 .empty {
-  padding: 0.5rem 0.75rem;
-  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  text-align: center;
+  border: 1px dashed v.$border-light;
+  border-radius: v.$radius;
   color: v.$text-dim;
+  gap: 0.5rem;
 }
 
+.emptyIcon {
+  color: v.$text-dim;
+  opacity: 0.5;
+}
+
+/* ---------- Parameter settings ---------- */
 .params {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem;
+  gap: 1rem;
+  padding: 1.5rem;
   border-top: 1px solid v.$border;
+  background: rgba(18, 19, 24, 0.3);
+}
+
+.paramsHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: v.$text-muted;
+}
+
+.paramsHeaderIcon {
+  color: v.$accent;
 }
 
 .param {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
 
-  span {
+.paramMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+
+  span:first-child {
     color: v.$text-muted;
-  }
-  input[type="range"] {
-    width: 100%;
-    margin-top: 0.25rem;
-    accent-color: v.$accent;
   }
 }
 
-/* ---------- Main ---------- */
+.paramValue {
+  font-weight: 600;
+  color: v.$accent-glow;
+}
+
+.param input[type="range"] {
+  width: 100%;
+  accent-color: v.$accent-glow;
+  height: 4px;
+  background: v.$surface-2;
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: v.$accent-glow;
+    transition: transform 0.1s, background 0.1s;
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+
+    &:hover {
+      transform: scale(1.2);
+      background: v.$accent-hover;
+    }
+  }
+}
+
+/* ---------- Main chat area ---------- */
 .main {
   display: flex;
   flex: 1;
   flex-direction: column;
+  background: v.$bg;
+  position: relative;
 }
 
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  justify-content: space-between;
+  height: 4.5rem;
+  padding: 0 2rem;
   border-bottom: 1px solid v.$border;
+  background: rgba(10, 11, 13, 0.7);
+  backdrop-filter: blur(12px);
+  z-index: 5;
+}
+
+.toolbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .btnPrimary {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #fff;
-  background: v.$accent;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #000;
+  background: v.$accent-glow;
   border-radius: v.$radius-sm;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
 
   &:hover:not(:disabled) {
     background: v.$accent-hover;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(212, 175, 55, 0.25);
   }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
   &:disabled {
-    opacity: 0.4;
-    cursor: default;
+    opacity: 0.35;
+    cursor: not-allowed;
+    box-shadow: none;
   }
 }
 
 .btnGhost {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
-  color: v.$text;
-  background: none;
-  border: 1px solid v.$surface-2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: v.$accent-glow;
+  background: transparent;
+  border: 1px solid v.$border;
   border-radius: v.$radius-sm;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    border-color: v.$accent-glow;
+    background: v.$accent-soft;
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
 
   &:disabled {
-    opacity: 0.4;
-    cursor: default;
+    opacity: 0.35;
+    cursor: not-allowed;
+    border-color: v.$border-light;
   }
+}
+
+.toolbarRight {
+  display: flex;
+  align-items: center;
 }
 
 .scope {
-  margin-left: auto;
-  font-size: 0.75rem;
-  color: v.$text-dim;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: v.$text-muted;
+  background: v.$surface;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid v.$border;
 }
 
+.statusDotActive {
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.statusDotIndexing {
+  width: 6px;
+  height: 6px;
+  background: #f59e0b;
+  border-radius: 50%;
+  animation: pulseDot 1.5s infinite;
+}
+
+.statusDotAll {
+  width: 6px;
+  height: 6px;
+  background: v.$accent-glow;
+  border-radius: 50%;
+  box-shadow: 0 0 8px v.$accent-glow;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* ---------- Messages Feed ---------- */
 .messages {
   flex: 1;
   overflow-y: auto;
-  padding: 1.5rem;
+  padding: 2.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 2rem;
 }
 
 .placeholder {
-  margin-top: 5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 48rem;
+  margin: 3rem auto 0;
   text-align: center;
-  color: v.$text-dim;
+  animation: fadeIn 0.4s ease-out;
+
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: v.$text;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
 }
 
+.placeholderLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 5rem;
+  background: v.$accent-soft;
+  border: 1px solid v.$accent;
+  border-radius: 20px;
+  box-shadow: 0 0 30px rgba(197, 168, 128, 0.15);
+}
+
+.placeholderLogoIcon {
+  color: v.$accent-glow;
+  filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.3));
+}
+
+.placeholderSub {
+  font-size: 0.95rem;
+  color: v.$text-muted;
+  margin-bottom: 3rem;
+}
+
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.featureCard {
+  background: v.$surface;
+  border: 1px solid v.$border-light;
+  border-radius: v.$radius;
+  padding: 1.5rem;
+  text-align: left;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: v.$border;
+    transform: translateY(-3px);
+    box-shadow: v.$shadow-gold;
+  }
+
+  h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: v.$text;
+    margin-bottom: 0.35rem;
+  }
+
+  p {
+    font-size: 0.8rem;
+    color: v.$text-dim;
+    line-height: 1.4;
+  }
+}
+
+.featureCardIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  background: v.$surface-2;
+  border-radius: 8px;
+  color: v.$accent-glow;
+  margin-bottom: 0.75rem;
+}
+
+/* ---------- Chat Bubbles ---------- */
 .row {
   display: flex;
-  justify-content: flex-start;
+  gap: 1rem;
+  align-items: flex-start;
+  max-width: 48rem;
+  width: 100%;
+  margin: 0 auto;
 
   &.user {
-    justify-content: flex-end;
+    flex-direction: row-reverse;
+
+    .bubble {
+      background: v.$accent;
+      color: #0b0c10;
+      border-radius: 18px 4px 18px 18px;
+      border: none;
+      box-shadow: 0 4px 15px rgba(197, 168, 128, 0.15);
+    }
+    
+    .bubbleText {
+      font-weight: 500;
+    }
   }
+}
+
+.avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.userAvatar {
+  background: v.$accent-hover;
+  color: #0b0c10;
+}
+
+.aiAvatar {
+  background: v.$surface-2;
+  border: 1px solid v.$border;
+  color: v.$accent-glow;
 }
 
 .bubble {
-  max-width: 42rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  border-radius: 1rem;
+  flex: 1;
+  padding: 1rem 1.25rem;
+  font-size: 0.925rem;
+  line-height: 1.55;
+  border-radius: 4px 18px 18px 18px;
   background: v.$surface;
+  border: 1px solid v.$border-light;
   color: v.$text;
-
-  &.user {
-    background: v.$accent;
-    color: #fff;
-  }
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: calc(100% - 3rem);
 }
 
 .bubbleText {
   white-space: pre-wrap;
 }
 
+/* ---------- Sources / Citations ---------- */
 .sources {
-  margin-top: 0.75rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid v.$surface-2;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed v.$border;
 }
 
-.sourcesTitle {
-  margin-bottom: 0.25rem;
+.sourcesHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: v.$accent-glow;
+  margin-bottom: 0.5rem;
+}
+
+.sourcesHeaderIcon {
+  color: v.$accent-glow;
+}
+
+.sourceCardsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sourceCard {
+  background: v.$surface-2;
+  border: 1px solid v.$border-light;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: v.$accent;
+    background: rgba(197, 168, 128, 0.04);
+  }
+
+  &.expanded {
+    border-color: v.$accent-glow;
+    background: rgba(197, 168, 128, 0.06);
+  }
+}
+
+.sourceCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.sourceBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
   color: v.$text-muted;
 }
 
-.source {
+.expandChevron {
+  color: v.$text-dim;
+  transition: transform 0.2s ease;
+
+  &.rotate {
+    transform: rotate(90deg);
+  }
+}
+
+.sourceSnippet {
   font-size: 0.75rem;
   color: v.$text-dim;
-  list-style: none;
+  line-height: 1.45;
+  transition: color 0.2s;
+
+  .sourceCard:hover & {
+    color: v.$text-muted;
+  }
+  .sourceCard.expanded & {
+    color: v.$text;
+  }
 }
 
+/* ---------- Thinking Indicator ---------- */
 .thinking {
-  font-size: 0.875rem;
-  color: v.$text-dim;
-}
-
-.error {
-  padding: 0.5rem 1.5rem;
-  font-size: 0.875rem;
-  color: v.$danger;
-  background: rgba(69, 10, 10, 0.4);
-  border-top: 1px solid rgba(127, 29, 29, 0.5);
-}
-
-.composer {
   display: flex;
-  gap: 0.5rem;
-  padding: 1rem;
-  border-top: 1px solid v.$border;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0;
+
+  span {
+    width: 6px;
+    height: 6px;
+    background: v.$accent-glow;
+    border-radius: 50%;
+    display: inline-block;
+    animation: bounceThinking 1.4s infinite ease-in-out both;
+
+    &:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+    &:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+  }
+}
+
+@keyframes bounceThinking {
+  0%, 80%, 100% { 
+    transform: scale(0);
+    opacity: 0.3;
+  } 40% { 
+    transform: scale(1.0);
+    opacity: 1;
+  }
+}
+
+/* ---------- Error Display ---------- */
+.error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 48rem;
+  width: calc(100% - 4rem);
+  margin: 0.5rem auto 1rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.85rem;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: v.$radius-sm;
+  animation: fadeIn 0.2s ease-out;
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+/* ---------- Chat Composer ---------- */
+.composer {
+  padding: 1.5rem 2rem 2.5rem;
+  background: linear-gradient(to top, v.$bg 70%, transparent);
+  z-index: 5;
+}
+
+.composerInner {
+  display: flex;
+  align-items: center;
+  max-width: 48rem;
+  width: 100%;
+  margin: 0 auto;
+  background: v.$surface;
+  border: 1px solid v.$border;
+  border-radius: 999px;
+  padding: 0.5rem 0.5rem 0.5rem 1.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+  &:focus-within {
+    border-color: v.$accent-glow;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.15), 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
 }
 
 .input {
   flex: 1;
-  padding: 0.625rem 1rem;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   color: v.$text;
-  background: v.$surface;
-  border: 1px solid v.$surface-2;
-  border-radius: v.$radius;
+  background: transparent;
+  border: none;
   outline: none;
+  padding-right: 1rem;
 
-  &:focus {
-    border-color: v.$accent;
+  &::placeholder {
+    color: v.$text-dim;
   }
 }
 
 .sendBtn {
-  padding: 0.625rem 1.25rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #fff;
-  background: v.$accent;
-  border: none;
-  border-radius: v.$radius;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: v.$accent-glow;
+  color: #000;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
 
   &:hover:not(:disabled) {
     background: v.$accent-hover;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
   }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
   &:disabled {
-    opacity: 0.4;
-    cursor: default;
+    background: v.$surface-2;
+    color: v.$text-dim;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

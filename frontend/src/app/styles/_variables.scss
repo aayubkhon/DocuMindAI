@@ -1,18 +1,25 @@
-// Shared design tokens for DocuMind_AI
+// Shared design tokens for DocuMind_AI - Luxury Obsidian & Warm Gold Theme
+$bg: #0a0b0d;
+$surface: #121318;
+$surface-2: #1c1d24;
+$border: rgba(197, 168, 128, 0.12);
+$border-light: rgba(255, 255, 255, 0.05);
 
-$bg: #09090b;
-$surface: #18181b;
-$surface-2: #27272a;
-$border: #27272a;
-$text: #f4f4f5;
-$text-muted: #a1a1aa;
-$text-dim: #71717a;
+$text: #f5f2eb;
+$text-muted: #aba8a2;
+$text-dim: #75736e;
 
-$accent: #0d9488;
-$accent-hover: #0f766e;
-$accent-soft: rgba(13, 148, 136, 0.2);
+$accent: #c5a880;          // Warm bronze-gold
+$accent-glow: #d4af37;    // Classic bright gold
+$accent-hover: #e5c9a3;   // Light gold hover
+$accent-soft: rgba(197, 168, 128, 0.08);
 
 $danger: #f87171;
+$danger-hover: #ef4444;
+$danger-soft: rgba(248, 113, 113, 0.08);
 
-$radius: 10px;
-$radius-sm: 6px;
+$radius: 12px;
+$radius-sm: 8px;
+
+$shadow-gold: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(197, 168, 128, 0.08);
+$shadow-glow: 0 0 20px rgba(197, 168, 128, 0.25);
