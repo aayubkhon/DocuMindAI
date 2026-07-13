@@ -1,0 +1,162 @@
+"""RAG orchestrator (the "Orkestrator (LangChain)" box in the diagram).
+
+Ties together preprocessing (PDF -> chunks -> vectors) and retrieval
+(question -> search -> context -> LLM -> answer).
+"""
+import json
+import re
+import uuid
+from pathlib import Path
+
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+
+from app.config import settings
+from app.schemas.chat import (
+    ChatResponse,
+    GenerationParams,
+    QuizQuestion,
+    QuizResponse,
+    SourceChunk,
+)
+from app.schemas.document import DocumentMeta
+from app.services import registry, vectorstore
+from app.services.chunking import chunk_pages
+from app.services.llm import get_llm
+from app.services.pdf_service import extract_pages
+
+_ANSWER_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are DocuMind_AI, a document analysis assistant. Answer the "
+            "user's question using ONLY the provided context. Cite the page "
+            "number for each fact like (Page 3). If the answer is not in the "
+            "context, say you could not find it in the document.",
+        ),
+        ("human", "Context:\n{context}\n\nQuestion: {question}"),
+    ]
+)
+
+_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are DocuMind_AI. Produce a concise bullet-point summary of the "
+            "document context. Cite page numbers like (Page 3) where relevant.",
+        ),
+        ("human", "Document context:\n{context}\n\nWrite the summary:"),
+    ]
+)
+
+_QUIZ_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are DocuMind_AI. Create a multiple-choice quiz from the context. "
+            "Return ONLY valid JSON: a list of objects with keys "
+            '"question", "options" (4 strings), and "answer" (one of the options). '
+            "No markdown, no extra text.",
+        ),
+        ("human", "Context:\n{context}\n\nGenerate {n} quiz questions as JSON:"),
+    ]
+)
+
+
+def _format_context(results) -> tuple[str, list[SourceChunk]]:
+    context_parts: list[str] = []
+    sources: list[SourceChunk] = []
+    for doc, score in results:
+        page = doc.metadata.get("page")
+        context_parts.append(f"[Page {page}] {doc.page_content}")
+        sources.append(
+            SourceChunk(
+                document_id=doc.metadata.get("document_id", ""),
+                filename=doc.metadata.get("filename", ""),
+                page=page,
+                snippet=doc.page_content[:240],
+                score=round(score, 4) if score is not None else None,
+            )
+        )
+    return "\n\n".join(context_parts), sources
+
+
+def ingest_pdf(file_path: str | Path, filename: str) -> DocumentMeta:
+    """Preprocessing pipeline: PDF -> pages -> chunks -> vectors -> registry."""
+    document_id = uuid.uuid4().hex
+    pages = extract_pages(file_path)
+    if not pages:
+        raise ValueError("No extractable text found in the PDF.")
+
+    chunks = chunk_pages(pages, document_id=document_id, filename=filename)
+    vectorstore.add_documents(chunks, document_id=document_id)
+
+    size_bytes = Path(file_path).stat().st_size
+    return registry.add(document_id, filename, size_bytes, len(chunks))
+
+
+def answer_question(
+    question: str, *, document_id: str | None, params: GenerationParams
+) -> ChatResponse:
+    """Retrieval pipeline + generation."""
+    results = vectorstore.similarity_search(
+        question, k=params.top_k, document_id=document_id
+    )
+    if not results:
+        return ChatResponse(
+            answer="No indexed documents matched your question yet.", sources=[]
+        )
+
+    context, sources = _format_context(results)
+    chain = _ANSWER_PROMPT | get_llm(params.temperature) | StrOutputParser()
+    answer = chain.invoke({"context": context, "question": question})
+    return ChatResponse(answer=answer.strip(), sources=sources)
+
+
+def _document_context(document_id: str, params: GenerationParams) -> str:
+    """Grab a broad slice of a document for summary/quiz generation."""
+    results = vectorstore.similarity_search(
+        "overview summary key points main findings",
+        k=max(params.top_k, 8),
+        document_id=document_id,
+    )
+    context, _ = _format_context(results)
+    return context
+
+
+def summarize(document_id: str, params: GenerationParams) -> ChatResponse:
+    context = _document_context(document_id, params)
+    if not context:
+        return ChatResponse(answer="Document not found or empty.", sources=[])
+    chain = _SUMMARY_PROMPT | get_llm(params.temperature) | StrOutputParser()
+    summary = chain.invoke({"context": context})
+    _, sources = _format_context(
+        vectorstore.similarity_search("summary", k=params.top_k, document_id=document_id)
+    )
+    return ChatResponse(answer=summary.strip(), sources=sources)
+
+
+def generate_quiz(
+    document_id: str, params: GenerationParams, n: int = 5
+) -> QuizResponse:
+    context = _document_context(document_id, params)
+    chain = _QUIZ_PROMPT | get_llm(params.temperature) | StrOutputParser()
+    raw = chain.invoke({"context": context, "n": n})
+
+    # LLMs sometimes wrap JSON in prose/markdown; extract the array defensively.
+    match = re.search(r"\[.*\]", raw, re.DOTALL)
+    payload = match.group(0) if match else raw
+    try:
+        items = json.loads(payload)
+        questions = [QuizQuestion(**item) for item in items]
+    except (json.JSONDecodeError, TypeError, ValueError):
+        questions = []
+    return QuizResponse(questions=questions)
+
+
+def delete_document(document_id: str) -> bool:
+    meta = registry.get(document_id)
+    if not meta:
+        return False
+    vectorstore.delete_document(document_id, num_chunks=meta.num_chunks)
+    return registry.remove(document_id)
