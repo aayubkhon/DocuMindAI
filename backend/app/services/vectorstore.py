@@ -4,6 +4,7 @@ Holds the "Vektorli Ma'lumotlar Bazasi" from the architecture diagram. Each
 chunk is stored with a deterministic id ("{document_id}-{index}") so a document
 can be deleted without needing delete-by-metadata (unsupported on serverless).
 """
+import time
 from functools import lru_cache
 
 from langchain_core.documents import Document
@@ -19,18 +20,29 @@ def _client() -> Pinecone:
     return Pinecone(api_key=settings.pinecone_api_key)
 
 
+def _ensure_index(pc: Pinecone) -> None:
+    """Create the serverless index if missing and wait until it is ready."""
+    if settings.pinecone_index in pc.list_indexes().names():
+        return
+    pc.create_index(
+        name=settings.pinecone_index,
+        dimension=settings.embed_dimension,
+        metric="cosine",
+        spec=ServerlessSpec(
+            cloud=settings.pinecone_cloud, region=settings.pinecone_region
+        ),
+    )
+    # Index creation is asynchronous; block until it can accept writes.
+    for _ in range(30):
+        if pc.describe_index(settings.pinecone_index).status.get("ready"):
+            return
+        time.sleep(1)
+
+
 @lru_cache
 def get_vectorstore() -> PineconeVectorStore:
     pc = _client()
-    if settings.pinecone_index not in pc.list_indexes().names():
-        pc.create_index(
-            name=settings.pinecone_index,
-            dimension=settings.embed_dimension,
-            metric="cosine",
-            spec=ServerlessSpec(
-                cloud=settings.pinecone_cloud, region=settings.pinecone_region
-            ),
-        )
+    _ensure_index(pc)
     return PineconeVectorStore(
         index=pc.Index(settings.pinecone_index), embedding=get_embeddings()
     )
