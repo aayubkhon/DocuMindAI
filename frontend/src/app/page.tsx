@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import type { ChatResponse, DocumentMeta, SourceChunk } from "@/lib/types";
+import { LANGUAGES, translations, detectLang, saveLang, type Lang } from "@/lib/i18n";
 import styles from "./page.module.scss";
 
 interface Message {
@@ -20,9 +21,24 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [temperature, setTemperature] = useState(0.3);
   const [topK, setTopK] = useState(4);
+  const [lang, setLang] = useState<Lang>("en");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const params = { temperature, top_k: topK };
+  const t = translations[lang];
+
+  // Default the language from the browser/OS locale (or a saved choice) after
+  // mount. Detecting on the client (not in useState) keeps the server and client
+  // markup identical, avoiding a hydration mismatch.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLang(detectLang());
+  }, []);
+
+  function changeLang(next: Lang) {
+    setLang(next);
+    saveLang(next);
+  }
 
   const refresh = useCallback(async () => {
     try {
@@ -98,7 +114,7 @@ export default function Home() {
     setBusy(true);
     setError(null);
     try {
-      pushAssistant(await api.chat(question, activeDoc, params));
+      pushAssistant(await api.chat(question, activeDoc, params, lang));
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -108,13 +124,10 @@ export default function Home() {
 
   async function handleSummarize() {
     if (!activeDoc || busy) return;
-    setMessages((m) => [
-      ...m,
-      { role: "user", content: "Summarize this document." },
-    ]);
+    setMessages((m) => [...m, { role: "user", content: t.summarizeMsg }]);
     setBusy(true);
     try {
-      pushAssistant(await api.summarize(activeDoc, params));
+      pushAssistant(await api.summarize(activeDoc, params, lang));
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -126,13 +139,13 @@ export default function Home() {
     if (!activeDoc || busy) return;
     setBusy(true);
     try {
-      const quiz = await api.quiz(activeDoc, params);
+      const quiz = await api.quiz(activeDoc, params, lang);
       const text = quiz.questions
         .map(
           (q, i) =>
             `${i + 1}. ${q.question}\n${q.options
               .map((o) => `   - ${o}`)
-              .join("\n")}\n   Answer: ${q.answer}`
+              .join("\n")}\n   ${t.answerLabel}: ${q.answer}`
         )
         .join("\n\n");
       pushAssistant({
@@ -154,8 +167,22 @@ export default function Home() {
     <div className={styles.app}>
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
-          <h1>DocuMind_AI</h1>
-          <p>Document intelligence</p>
+          <div>
+            <h1>DocuMind_AI</h1>
+            <p>{t.subtitle}</p>
+          </div>
+          <select
+            className={styles.langSelect}
+            value={lang}
+            onChange={(e) => changeLang(e.target.value as Lang)}
+            aria-label={t.language}
+          >
+            {LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code}>
+                {l.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className={styles.uploadWrap}>
@@ -164,7 +191,7 @@ export default function Home() {
             onClick={() => fileRef.current?.click()}
             disabled={busy}
           >
-            {busy ? "Working…" : "Upload PDF"}
+            {busy ? t.working : t.uploadPdf}
           </button>
           <input
             ref={fileRef}
@@ -176,7 +203,7 @@ export default function Home() {
         </div>
 
         <div className={styles.library}>
-          <h2 className={styles.libraryTitle}>Document Library</h2>
+          <h2 className={styles.libraryTitle}>{t.library}</h2>
           <ul className={styles.docList}>
             {documents.map((doc) => (
               <li
@@ -192,29 +219,31 @@ export default function Home() {
                 >
                   <span className={styles.docFile}>{doc.filename}</span>
                   {doc.status === "processing" && (
-                    <span className={styles.badgeProcessing}>indexing…</span>
+                    <span className={styles.badgeProcessing}>{t.indexing}</span>
                   )}
                   {doc.status === "failed" && (
-                    <span className={styles.badgeFailed}>failed</span>
+                    <span className={styles.badgeFailed}>{t.failed}</span>
                   )}
                 </button>
                 <button
                   className={styles.deleteBtn}
                   onClick={() => handleDelete(doc.id)}
                 >
-                  Delete
+                  {t.delete}
                 </button>
               </li>
             ))}
             {documents.length === 0 && (
-              <li className={styles.empty}>No documents yet.</li>
+              <li className={styles.empty}>{t.noDocs}</li>
             )}
           </ul>
         </div>
 
         <div className={styles.params}>
           <label className={styles.param}>
-            <span>Creative Freedom · {temperature.toFixed(1)}</span>
+            <span>
+              {t.creativeFreedom} · {temperature.toFixed(1)}
+            </span>
             <input
               type="range"
               min={0}
@@ -225,7 +254,9 @@ export default function Home() {
             />
           </label>
           <label className={styles.param}>
-            <span>Context chunks · {topK}</span>
+            <span>
+              {t.contextChunks} · {topK}
+            </span>
             <input
               type="range"
               min={1}
@@ -245,29 +276,27 @@ export default function Home() {
             onClick={handleSummarize}
             disabled={!activeReady || busy}
           >
-            Summarize Document
+            {t.summarize}
           </button>
           <button
             className={styles.btnGhost}
             onClick={handleQuiz}
             disabled={!activeReady || busy}
           >
-            Generate Quiz
+            {t.quiz}
           </button>
           <span className={styles.scope}>
             {activeDoc
               ? activeReady
-                ? `Scope: ${activeName}`
-                : `Indexing ${activeName}…`
-              : "Scope: all documents"}
+                ? t.scopeDoc(activeName)
+                : t.scopeIndexing(activeName)
+              : t.scopeAll}
           </span>
         </div>
 
         <div className={styles.messages}>
           {messages.length === 0 && (
-            <div className={styles.placeholder}>
-              Upload a PDF and ask a question to get started.
-            </div>
+            <div className={styles.placeholder}>{t.placeholder}</div>
           )}
           {messages.map((m, i) => (
             <div
@@ -284,7 +313,7 @@ export default function Home() {
                 <p className={styles.bubbleText}>{m.content}</p>
                 {m.sources && m.sources.length > 0 && (
                   <div className={styles.sources}>
-                    <p className={styles.sourcesTitle}>Retrieval Details</p>
+                    <p className={styles.sourcesTitle}>{t.retrievalDetails}</p>
                     <ul>
                       {m.sources.map((s, j) => (
                         <li key={j} className={styles.source}>
@@ -298,7 +327,7 @@ export default function Home() {
               </div>
             </div>
           ))}
-          {busy && <div className={styles.thinking}>Thinking…</div>}
+          {busy && <div className={styles.thinking}>{t.thinking}</div>}
         </div>
 
         {error && <div className={styles.error}>{error}</div>}
@@ -309,14 +338,14 @@ export default function Home() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAsk()}
-            placeholder="Ask a question or type a command…"
+            placeholder={t.askPlaceholder}
           />
           <button
             className={styles.sendBtn}
             onClick={handleAsk}
             disabled={busy}
           >
-            Send
+            {t.send}
           </button>
         </div>
       </main>

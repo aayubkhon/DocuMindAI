@@ -17,6 +17,10 @@
 }
 
 .brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   padding: 1rem;
   border-bottom: 1px solid v.$border;
 
@@ -27,6 +31,20 @@
   p {
     font-size: 0.75rem;
     color: v.$text-dim;
+  }
+}
+
+.langSelect {
+  padding: 0.3rem 0.4rem;
+  font-size: 0.75rem;
+  color: v.$text;
+  background: v.$surface-2;
+  border: 1px solid v.$border;
+  border-radius: v.$radius-sm;
+  outline: none;
+
+  &:focus {
+    border-color: v.$accent;
   }
 }
 

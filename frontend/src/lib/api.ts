@@ -4,6 +4,7 @@ import type {
   GenerationParams,
   QuizResponse,
 } from "./types";
+import type { Lang } from "./i18n";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
@@ -37,7 +38,8 @@ export const api = {
   async chat(
     question: string,
     documentId: string | null,
-    params: GenerationParams
+    params: GenerationParams,
+    language: Lang
   ): Promise<ChatResponse> {
     return handle(
       await fetch(`${API_URL}/chat`, {
@@ -47,6 +49,7 @@ export const api = {
           question,
           document_id: documentId,
           params,
+          language,
         }),
       })
     );
@@ -54,26 +57,28 @@ export const api = {
 
   async summarize(
     documentId: string,
-    params: GenerationParams
+    params: GenerationParams,
+    language: Lang
   ): Promise<ChatResponse> {
     return handle(
       await fetch(`${API_URL}/summary`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ document_id: documentId, params }),
+        body: JSON.stringify({ document_id: documentId, params, language }),
       })
     );
   },
 
   async quiz(
     documentId: string,
-    params: GenerationParams
+    params: GenerationParams,
+    language: Lang
   ): Promise<QuizResponse> {
     return handle(
       await fetch(`${API_URL}/quiz`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ document_id: documentId, params }),
+        body: JSON.stringify({ document_id: documentId, params, language }),
       })
     );
   },
