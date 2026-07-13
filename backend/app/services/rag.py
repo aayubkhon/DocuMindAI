@@ -46,11 +46,16 @@ _ANSWER_PROMPT = ChatPromptTemplate.from_messages(
             "You are DocuMind_AI, a document analysis assistant. Answer the "
             "user's question using ONLY the provided context. Cite the page "
             "number for each fact like (Page 3). If the answer is not in the "
-            "context, say you could not find it in the document. "
-            "Always write your entire answer in {language}, regardless of the "
-            "language of the document or the question.",
+            "context, say you could not find it in the document.\n"
+            "CRITICAL LANGUAGE RULE: Write your ENTIRE reply in {language}. The "
+            "document and the question may be in another language — you must "
+            "still translate and respond only in {language}. Do not mix languages.",
         ),
-        ("human", "Context:\n{context}\n\nQuestion: {question}"),
+        (
+            "human",
+            "Context:\n{context}\n\nQuestion: {question}\n\n"
+            "(Reminder: respond entirely in {language}.)",
+        ),
     ]
 )
 
@@ -59,8 +64,9 @@ _SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
         (
             "system",
             "You are DocuMind_AI. Produce a concise bullet-point summary of the "
-            "document context. Cite page numbers like (Page 3) where relevant. "
-            "Write the entire summary in {language}.",
+            "document context. Cite page numbers like (Page 3) where relevant.\n"
+            "CRITICAL: Write the ENTIRE summary in {language}, translating from "
+            "the document's language if needed. Do not mix languages.",
         ),
         ("human", "Document context:\n{context}\n\nWrite the summary:"),
     ]
