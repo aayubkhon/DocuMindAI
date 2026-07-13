@@ -26,6 +26,19 @@ from app.services.chunking import chunk_pages
 from app.services.llm import get_llm
 from app.services.pdf_service import extract_pages
 
+# Human-readable names for the languages the UI offers.
+_LANGUAGE_NAMES = {
+    "en": "English",
+    "uz": "Uzbek",
+    "ru": "Russian",
+    "ko": "Korean",
+}
+
+
+def _language_name(code: str) -> str:
+    return _LANGUAGE_NAMES.get(code, "English")
+
+
 _ANSWER_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
@@ -33,7 +46,9 @@ _ANSWER_PROMPT = ChatPromptTemplate.from_messages(
             "You are DocuMind_AI, a document analysis assistant. Answer the "
             "user's question using ONLY the provided context. Cite the page "
             "number for each fact like (Page 3). If the answer is not in the "
-            "context, say you could not find it in the document.",
+            "context, say you could not find it in the document. "
+            "Always write your entire answer in {language}, regardless of the "
+            "language of the document or the question.",
         ),
         ("human", "Context:\n{context}\n\nQuestion: {question}"),
     ]
@@ -44,7 +59,8 @@ _SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
         (
             "system",
             "You are DocuMind_AI. Produce a concise bullet-point summary of the "
-            "document context. Cite page numbers like (Page 3) where relevant.",
+            "document context. Cite page numbers like (Page 3) where relevant. "
+            "Write the entire summary in {language}.",
         ),
         ("human", "Document context:\n{context}\n\nWrite the summary:"),
     ]
@@ -57,7 +73,8 @@ _QUIZ_PROMPT = ChatPromptTemplate.from_messages(
             "You are DocuMind_AI. Create a multiple-choice quiz from the context. "
             "Return ONLY valid JSON: a list of objects with keys "
             '"question", "options" (4 strings), and "answer" (one of the options). '
-            "No markdown, no extra text.",
+            "No markdown, no extra text. "
+            "Write the question and all options in {language}.",
         ),
         ("human", "Context:\n{context}\n\nGenerate {n} quiz questions as JSON:"),
     ]
@@ -121,7 +138,11 @@ def embed_document(document_id: str, chunks: list[Document]) -> None:
 
 
 def answer_question(
-    question: str, *, document_id: str | None, params: GenerationParams
+    question: str,
+    *,
+    document_id: str | None,
+    params: GenerationParams,
+    language: str = "en",
 ) -> ChatResponse:
     """Retrieval pipeline + generation."""
     results = vectorstore.similarity_search(
@@ -134,7 +155,9 @@ def answer_question(
 
     context, sources = _format_context(results)
     chain = _ANSWER_PROMPT | get_llm(params.temperature) | StrOutputParser()
-    answer = chain.invoke({"context": context, "question": question})
+    answer = chain.invoke(
+        {"context": context, "question": question, "language": _language_name(language)}
+    )
     return ChatResponse(answer=answer.strip(), sources=sources)
 
 
@@ -149,12 +172,14 @@ def _document_context(document_id: str, params: GenerationParams) -> str:
     return context
 
 
-def summarize(document_id: str, params: GenerationParams) -> ChatResponse:
+def summarize(
+    document_id: str, params: GenerationParams, language: str = "en"
+) -> ChatResponse:
     context = _document_context(document_id, params)
     if not context:
         return ChatResponse(answer="Document not found or empty.", sources=[])
     chain = _SUMMARY_PROMPT | get_llm(params.temperature) | StrOutputParser()
-    summary = chain.invoke({"context": context})
+    summary = chain.invoke({"context": context, "language": _language_name(language)})
     _, sources = _format_context(
         vectorstore.similarity_search("summary", k=params.top_k, document_id=document_id)
     )
@@ -162,11 +187,13 @@ def summarize(document_id: str, params: GenerationParams) -> ChatResponse:
 
 
 def generate_quiz(
-    document_id: str, params: GenerationParams, n: int = 5
+    document_id: str, params: GenerationParams, language: str = "en", n: int = 5
 ) -> QuizResponse:
     context = _document_context(document_id, params)
     chain = _QUIZ_PROMPT | get_llm(params.temperature) | StrOutputParser()
-    raw = chain.invoke({"context": context, "n": n})
+    raw = chain.invoke(
+        {"context": context, "n": n, "language": _language_name(language)}
+    )
 
     # LLMs sometimes wrap JSON in prose/markdown; extract the array defensively.
     match = re.search(r"\[.*\]", raw, re.DOTALL)

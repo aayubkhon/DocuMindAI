@@ -16,17 +16,20 @@ router = APIRouter(tags=["chat"])
 async def chat(request: ChatRequest) -> ChatResponse:
     """Ask a question over one or all documents (Retrieval + Generation)."""
     return rag.answer_question(
-        request.question, document_id=request.document_id, params=request.params
+        request.question,
+        document_id=request.document_id,
+        params=request.params,
+        language=request.language,
     )
 
 
 @router.post("/summary", response_model=ChatResponse)
 async def summarize(request: SummaryRequest) -> ChatResponse:
     """Summarize a document (UI: "Summarize Document")."""
-    return rag.summarize(request.document_id, request.params)
+    return rag.summarize(request.document_id, request.params, request.language)
 
 
 @router.post("/quiz", response_model=QuizResponse)
 async def quiz(request: SummaryRequest) -> QuizResponse:
     """Generate a multiple-choice quiz (UI: "Generate Quiz")."""
-    return rag.generate_quiz(request.document_id, request.params)
+    return rag.generate_quiz(request.document_id, request.params, request.language)

@@ -1,5 +1,10 @@
 """Pydantic schemas for chat, retrieval, summary and quiz."""
+from typing import Literal
+
 from pydantic import BaseModel, Field
+
+# Languages the assistant can respond in (matches the frontend selector).
+Language = Literal["en", "uz", "ru", "ko"]
 
 
 class GenerationParams(BaseModel):
@@ -15,6 +20,7 @@ class ChatRequest(BaseModel):
         None, description="Limit retrieval to a single document; None = all documents."
     )
     params: GenerationParams = GenerationParams()
+    language: Language = "en"
 
 
 class SourceChunk(BaseModel):
@@ -33,6 +39,7 @@ class ChatResponse(BaseModel):
 class SummaryRequest(BaseModel):
     document_id: str
     params: GenerationParams = GenerationParams()
+    language: Language = "en"
 
 
 class QuizQuestion(BaseModel):
