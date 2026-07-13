@@ -2,18 +2,19 @@
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
 
 from app.config import settings
 from app.schemas.document import DocumentMeta, UploadResponse
-from app.services import registry
-from app.services.rag import delete_document, ingest_pdf
+from app.services import registry, rag
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 
-@router.post("", response_model=UploadResponse, status_code=201)
-async def upload_document(file: UploadFile = File(...)) -> UploadResponse:
+@router.post("", response_model=UploadResponse, status_code=202)
+async def upload_document(
+    background: BackgroundTasks, file: UploadFile = File(...)
+) -> UploadResponse:
     if not (file.filename or "").lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
 
@@ -29,11 +30,15 @@ async def upload_document(file: UploadFile = File(...)) -> UploadResponse:
     tmp_path.write_bytes(contents)
 
     try:
-        meta = ingest_pdf(tmp_path, file.filename)
+        meta, chunks = rag.prepare_document(tmp_path, file.filename)
     except ValueError as exc:
-        tmp_path.unlink(missing_ok=True)
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    finally:
+        tmp_path.unlink(missing_ok=True)
 
+    # Embedding is rate-limited on the free tier, so run it in the background
+    # and let the client poll the document status.
+    background.add_task(rag.embed_document, meta.id, chunks)
     return UploadResponse(document=meta)
 
 
@@ -52,5 +57,5 @@ async def get_document(document_id: str) -> DocumentMeta:
 
 @router.delete("/{document_id}", status_code=204)
 async def remove_document(document_id: str) -> None:
-    if not delete_document(document_id):
+    if not rag.delete_document(document_id):
         raise HTTPException(status_code=404, detail="Document not found.")

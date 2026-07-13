@@ -8,6 +8,7 @@ import re
 import uuid
 from pathlib import Path
 
+from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -83,18 +84,40 @@ def _format_context(results) -> tuple[str, list[SourceChunk]]:
     return "\n\n".join(context_parts), sources
 
 
-def ingest_pdf(file_path: str | Path, filename: str) -> DocumentMeta:
-    """Preprocessing pipeline: PDF -> pages -> chunks -> vectors -> registry."""
+def prepare_document(
+    file_path: str | Path, filename: str
+) -> tuple[DocumentMeta, list[Document]]:
+    """Fast phase: PDF -> pages -> chunks, registered as 'processing'.
+
+    Returns the chunks so the caller can embed them in the background.
+    """
     document_id = uuid.uuid4().hex
     pages = extract_pages(file_path)
     if not pages:
         raise ValueError("No extractable text found in the PDF.")
 
     chunks = chunk_pages(pages, document_id=document_id, filename=filename)
-    vectorstore.add_documents(chunks, document_id=document_id)
-
     size_bytes = Path(file_path).stat().st_size
-    return registry.add(document_id, filename, size_bytes, len(chunks))
+    meta = registry.add(
+        document_id, filename, size_bytes, len(chunks), status="processing"
+    )
+    return meta, chunks
+
+
+def embed_document(document_id: str, chunks: list[Document]) -> None:
+    """Background phase: embed + store chunks, then mark the document ready."""
+    try:
+        vectorstore.add_documents(chunks, document_id=document_id)
+        registry.set_status(document_id, "ready")
+    except vectorstore.EmbeddingQuotaError:
+        registry.set_status(
+            document_id,
+            "failed",
+            "Embedding quota exceeded (Gemini free tier allows 100/min). "
+            "Please try again in a minute.",
+        )
+    except Exception as exc:  # noqa: BLE001 — record any failure for the UI
+        registry.set_status(document_id, "failed", str(exc)[:200])
 
 
 def answer_question(
