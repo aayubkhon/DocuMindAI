@@ -48,14 +48,17 @@ _ANSWER_PROMPT = ChatPromptTemplate.from_messages(
             "user's question using ONLY the provided context. Cite the page "
             "number for each fact like (Page 3). If the answer is not in the "
             "context, say you could not find it in the document.\n"
-            "CRITICAL LANGUAGE RULE: Write your ENTIRE reply in {language}. The "
-            "document and the question may be in another language — you must "
-            "still translate and respond only in {language}. Do not mix languages.",
+            "CRITICAL LANGUAGE RULE:\n"
+            "1. Write your ENTIRE reply, including all explanations, terminology, quotes, and concepts, in {language}.\n"
+            "2. Translate all vocabulary, specific terms, and content from the context (e.g. Uzbek or Russian) into {language}.\n"
+            "3. Do NOT use or copy words, letters, or scripts (such as Cyrillic, Arabic, or Latin scripts of the original document) from the context into your response, unless it is a literal person's name or place name that cannot be translated.\n"
+            "4. For example, if {language} is Korean, do not include any Uzbek or Cyrillic words in the text. Translate words like 'ne'mat' or 'вақт' completely to their Korean equivalents (like '축복' / '시간').\n"
+            "5. Never mix multiple languages in the response.",
         ),
         (
             "human",
             "Context:\n{context}\n\nQuestion: {question}\n\n"
-            "(Reminder: respond entirely in {language}.)",
+            "Respond ENTIRELY in {language}. Do not write any word in another language.",
         ),
     ]
 )
@@ -66,10 +69,13 @@ _SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
             "system",
             "You are DocuMind_AI. Produce a concise bullet-point summary of the "
             "document context. Cite page numbers like (Page 3) where relevant.\n"
-            "CRITICAL: Write the ENTIRE summary in {language}, translating from "
-            "the document's language if needed. Do not mix languages.",
+            "CRITICAL LANGUAGE RULE:\n"
+            "1. Write the ENTIRE summary in {language}.\n"
+            "2. Translate all vocabulary, specific terms, and content from the context (e.g. Uzbek or Russian) into {language}.\n"
+            "3. Do NOT use or copy words, letters, or scripts (such as Cyrillic, Arabic, or Latin scripts of the original document) from the context into your response, unless it is a literal person's name or place name that cannot be translated.\n"
+            "4. Never mix multiple languages in the summary.",
         ),
-        ("human", "Document context:\n{context}\n\nWrite the summary:"),
+        ("human", "Document context:\n{context}\n\nWrite the summary in {language}:"),
     ]
 )
 
@@ -81,9 +87,10 @@ _QUIZ_PROMPT = ChatPromptTemplate.from_messages(
             "Return ONLY valid JSON: a list of objects with keys "
             '"question", "options" (4 strings), and "answer" (one of the options). '
             "No markdown, no extra text. "
-            "Write the question and all options in {language}.",
+            "Write the question, all options, and the answer ENTIRELY in {language}.\n"
+            "Translate all vocabulary, specific terms, and content from the context (e.g. Uzbek or Russian) into {language}. Do not copy untranslated words or scripts.",
         ),
-        ("human", "Context:\n{context}\n\nGenerate {n} quiz questions as JSON:"),
+        ("human", "Context:\n{context}\n\nGenerate {n} quiz questions in {language} as JSON:"),
     ]
 )
 
