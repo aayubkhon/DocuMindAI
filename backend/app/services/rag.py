@@ -68,6 +68,8 @@ def _format_context(results) -> tuple[str, list[SourceChunk]]:
     sources: list[SourceChunk] = []
     for doc, score in results:
         page = doc.metadata.get("page")
+        # Pinecone stores numbers as floats; present pages as plain integers.
+        page = int(page) if page is not None else None
         context_parts.append(f"[Page {page}] {doc.page_content}")
         sources.append(
             SourceChunk(
