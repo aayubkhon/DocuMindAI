@@ -48,44 +48,18 @@ def get_vectorstore() -> PineconeVectorStore:
     )
 
 
-class EmbeddingQuotaError(Exception):
-    """Raised when the embedding provider's rate limit cannot be satisfied."""
-
-
-def _is_quota_error(exc: Exception) -> bool:
-    msg = str(exc)
-    return "RESOURCE_EXHAUSTED" in msg or "429" in msg
-
-
 def _chunk_ids(document_id: str, count: int) -> list[str]:
     return [f"{document_id}-{i}" for i in range(count)]
 
 
-def _add_batch(vs: PineconeVectorStore, batch, ids, *, max_retries: int = 4) -> None:
-    """Add one batch, retrying if the embedding quota is momentarily exhausted."""
-    for attempt in range(max_retries):
-        try:
-            vs.add_documents(batch, ids=ids)
-            return
-        except Exception as exc:  # noqa: BLE001 — provider errors vary by type
-            if _is_quota_error(exc) and attempt < max_retries - 1:
-                time.sleep(62)  # free-tier quota resets per minute
-                continue
-            if _is_quota_error(exc):
-                raise EmbeddingQuotaError(str(exc)) from exc
-            raise
-
-
-_SUBBATCH = 20  # chunks embedded+committed per step (keeps progress if we stop)
+_SUBBATCH = 64  # chunks embedded+committed per step (keeps progress if we stop)
 
 
 def add_documents(documents: list[Document], *, document_id: str) -> int:
-    """Embed and store chunks incrementally, throttled for the free-tier quota.
+    """Embed and store chunks in sub-batches (local Ollama has no rate limit).
 
-    Chunks are committed in small sub-batches spaced out over time so we stay
-    under the Gemini embedding limit (100/min) and never lose progress. If a
-    sub-batch fails permanently, chunks already stored for this document are
-    removed to avoid orphans.
+    If a sub-batch fails, chunks already stored for this document are removed to
+    avoid orphaned vectors.
     """
     if not documents:
         return 0
@@ -95,11 +69,8 @@ def add_documents(documents: list[Document], *, document_id: str) -> int:
     try:
         for start in range(0, len(documents), _SUBBATCH):
             end = min(start + _SUBBATCH, len(documents))
-            _add_batch(vs, documents[start:end], ids[start:end])
+            vs.add_documents(documents[start:end], ids=ids[start:end])
             added = end
-            if end < len(documents):
-                # ~80 embeddings/min — safely under the 100/min free-tier cap.
-                time.sleep(15)
     except Exception:
         if added:
             vs.delete(ids=ids[:added])
