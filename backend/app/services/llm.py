@@ -1,22 +1,22 @@
-"""Google Gemini LLM and embedding models."""
+"""Local Ollama LLM and embedding models — free, unlimited, private."""
 from functools import lru_cache
 
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_ollama import ChatOllama, OllamaEmbeddings
 
 from app.config import settings
 
 
 @lru_cache
-def get_embeddings() -> GoogleGenerativeAIEmbeddings:
-    return GoogleGenerativeAIEmbeddings(
-        model=settings.gemini_embed_model,
-        google_api_key=settings.google_api_key,
+def get_embeddings() -> OllamaEmbeddings:
+    return OllamaEmbeddings(
+        model=settings.ollama_embed_model,
+        base_url=settings.ollama_base_url,
     )
 
 
-def get_llm(temperature: float | None = None) -> ChatGoogleGenerativeAI:
-    return ChatGoogleGenerativeAI(
-        model=settings.gemini_llm_model,
-        google_api_key=settings.google_api_key,
+def get_llm(temperature: float | None = None) -> ChatOllama:
+    return ChatOllama(
+        model=settings.ollama_llm_model,
+        base_url=settings.ollama_base_url,
         temperature=settings.temperature if temperature is None else temperature,
     )

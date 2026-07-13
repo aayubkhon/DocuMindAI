@@ -18,15 +18,15 @@ class Settings(BaseSettings):
     # CORS — frontend origins
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
 
-    # Google Gemini (LLM + embeddings)
-    google_api_key: str = ""
-    gemini_llm_model: str = "gemini-2.5-flash"
-    gemini_embed_model: str = "models/gemini-embedding-001"
-    embed_dimension: int = 3072  # gemini-embedding-001 default output size
+    # Ollama (local LLM + embeddings) — free, unlimited, private
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_llm_model: str = "qwen2.5:7b"
+    ollama_embed_model: str = "nomic-embed-text"
+    embed_dimension: int = 768  # nomic-embed-text output size
 
     # Pinecone vector store
     pinecone_api_key: str = ""
-    pinecone_index: str = "documind-ai"
+    pinecone_index: str = "documind-ollama"
     pinecone_cloud: str = "aws"
     pinecone_region: str = "us-east-1"
 
